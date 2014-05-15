@@ -1,0 +1,168 @@
+numberlink (arukone)
+http://www.janko.at/Raetsel/Arukone/index.htm
+Rules: Connect each two cells with the same numbers by a line. The sections of a line run horizontally or vertically between the center points of orthogonally adjacent cells. A line must not cross or touch itself or another line.
+
+Rules: 
+	Connect each two cells with the same numbers by a line. 
+	The sections of a line run horizontally or vertically between the center points of orthogonally adjacent cells. 
+	A line must not cross or touch itself or another line.
+	
+a box has a location and contains something.
+Box X Y Content
+
+the content of a box is either a two-ended link or a one-ended link with an associated endpoint.
+Content = Content Link2 | Content Link1 Tag
+
+Link2 = Link2 ┏
+	| Link2 ┓
+	| Link2 ┗
+	| Link2 ┛
+	| Link2 ┃
+	| Link2 ━
+	
+Link1 = Link1 ^
+	| Link1 >
+	| Link1 v
+	| Link1 <
+
+the board is a grid of boxes. (we will use a set because they know where they are)
+Board = Board Boxes
+
+you can look at the neighbours of a box as you would expect (north, east, south, west)
+
+initially a box either has an endpoint in it or is empty.
+┏┓┗┛┃━
+endpoints
+^><v
+╸,╹,╺,╻
+
+7   3
+913  
+   7 
+    
+9   1
+becomes
+╺━━┓╻
+╻╻╻┃┃
+┃┃┃╹┃
+┃┃┗━┛
+╹┗━━╸
+in a solution, a box will have one or two sides used. endpoints will have only one used, while all other boxes on a path have two.
+
+method of enumeration
++0+
+3 1
++2+
+endpoints = 0001 0010 0100 1000
+endpoints = 1 2 4 8
+corners = 1100 1001 0110 0011
+angles = 3 9 6 12
+straights = 1010 0101
+straights = 5 10
+0001 is compatible with 0100
+
+won't be done now, but you can clearly do all this with bitbanging
+
+we will need a function that follows such a path, given a sanely-formed board (which will be defined in a sec). the squares of a link are the squares in the transitive closure of the "connects-to" relation. links must only connect matching endpoints. "connects-to" is basically what you would expect.
+
+we must define a sane board. Some easy requirements:
+	every endpoint is actually an endpoint
+	for every box, if it tries to connect to another box, that box also connects to it.
+	
+there is some function buds that encodes the (attempted) connectedness
+buds :: Box -> [Box]
+
+sane(B = Board Qs) =
+	\forall Qa, Qb \in Qs .
+	  Qa /= Qb => Qa \in buds(Qb) => Qb \in buds(Qa)
+	  
+the function we want to take the closure of is 
+buds?(P = Box, Q = Box) =
+	/\ P \in buds(Q)
+	/\ Q \in buds(P)
+
+link(P = Box) = closure of the relation "buds?"
+link(T = Tag, B = Board Qs) = 
+	link(Q) where 
+	  /\ Q \in Qs 
+	  /\ Q = Box L T
+	  
+that isn't enough. we also must rule out isolated loops.
+every square on the board is part of the link for some pair of endpoints
+complete(B = Board Qs) =
+	\forall Q \in Qs .
+	  \exists P = Box L T .
+	    Q \in link(P)
+		
+need to make sure the links are hooked up right
+correct(B = Board Qs) =
+	\forall Q \in Qs .
+	  Q = Box L T => 
+	    \forall P = Box _ T' \in Qs .
+		  T == T' => link(Q) == link(P)
+		
+solution(B = Board) = 
+	/\ sane(B)
+	/\ complete(B)
+	/\ correct(B)
+	
+predicates we can use
+1 0 0 0 0 0 0 1
+2 0 0 0 0 0 5 0
+0 0 0 0 0 0 3 0
+0 3 0 4 0 0 6 0
+0 0 0 0 0 0 5 0
+6 4 0 0 2 0 0 0
+0 7 0 0 0 0 7 0
+0 0 0 0 0 0 0 0
+In this board, the left 7 can't go down because that would mean that the bottom left corner can't be used by any link. This is correctly handled by the current solver, though.
+	
+However, we want to actually construct a correct board. An outline of our method:
+Construct a representation of every possible board.
+Enforce consistency of each square.
+until we're done:
+	pick two squares that have not yet been decided.
+	generate their cartesian product.
+	eliminate all obviously impossible combinations.
+	copy the rest of the board for each.
+	enforce consistency of the boards for each of those newly decided squares.
+	
+There are a few ways to do each of these. Consider the following board:
+AB
+CD
+EF
+squares A,D have tag 1, C and F have tag 2
+initially:
+A = {^,>,v,<,┏,┓,┗,┛,┃,━}
+B = {^,>,v,<,┏,┓,┗,┛,┃,━}
+C = {^,>,v,<,┏,┓,┗,┛,┃,━}
+D = {^,>,v,<,┏,┓,┗,┛,┃,━}
+E = {^,>,v,<,┏,┓,┗,┛,┃,━}
+F = {^,>,v,<,┏,┓,┗,┛,┃,━}
+We initially enforce consistency with each square: could there be /any/ solution where this square took on this value? This yields (separated into two steps, here:
+What is this square?
+A = {^,>,v,<}
+B = {┏,┓,┗,┛,┃,━}
+C = {^,>,v,<}
+D = {^,>,v,<}
+E = {┏,┓,┗,┛,┃,━}
+F = {^,>,v,<}
+Where is this square?
+A = {>,v}
+B = {┓}
+C = {^,>,v}
+D = {^,v,<}
+E = {┗}
+F = {^,<}
+Already, some are solved.
+A┓
+CD
+┗F
+Propagate squares known for certain
+A = {>}
+B = {┓}
+C = {v}
+D = {^}
+E = {┗}
+F = {<}
+And that's the solution to that toy problem.

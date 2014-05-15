@@ -1,0 +1,45 @@
+Corral (Baggu)
+http://www.janko.at/Raetsel/Corral/index.htm
+Rules: Draw a single closed loop along the grid lines of the diagram which does not cross or touch itself. All numbered cells must be inside of the loop. A number in a cell indicates how many cells inside of the loop are seen from this cell looking to the north, south, east and west. The cell with the number is counted exactly once. Other numbers do not block the visibility of cells behind it, but cells outside of the loop do so (you cannot look through an outside cell to another inside cell).
+
+An example puzzle
+___
+__5
+___
+becomes
+XX 
+  5
+XX 
+Rules: 
+A	Draw a single closed loop along the grid lines of the diagram which does not cross or touch itself. 
+B	All numbered cells must be inside of the loop.
+C	A number in a cell indicates how many cells inside of the loop are seen from this cell looking to the north, south, east and west. 
+D	The cell with the number is counted exactly once. 
+E	Other numbers do not block the visibility of cells behind it, but cells outside of the loop do so (you cannot look through an outside cell to another inside cell).
+
+condition A
+we can replace this with "color cells black and white. the white cells are orthogonally connected. The number on a cell indicates how many white cells must be reachable by moving over the white cells in any one direction until reaching the edge of the grid or a black cell."
+
+condition B
+all numbered cells are white. We can do this in our data structure.
+
+conditions D and E
+visible_count(S = Square, B = Board Qs) =
+	if white?(S) 
+	then	1
+			+ visible(north(S),north)
+			+ visible(east(S),east)
+			+ visible(south(S),south)
+			+ visible(west(S),west)
+	else	0
+	
+visible(S,f) =
+	if white?(S)
+	then 1 + visible(f(S),f)
+	else 0
+	
+condition C
+numbers(B = Board Qs) =
+	\forall Q = Square _ _ (Number N) \in Qs .
+	  visible_count(Q) == 
+		

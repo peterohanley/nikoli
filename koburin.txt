@@ -1,0 +1,84 @@
+koburin
+http://www.janko.at/Raetsel/Nikoli/Koburin.htm
+Rules: Paint some empty white cells of the diagram black and draw a single closed loop passing through all empty white cells. The number in some cells denotes the number of black cells orthogonally adjacent to this cell. There may exist some black cells not adjacent to a numbered cell. Numbered cells are never painted black. Two black cells must not be orthogonally adjacent. The loop never crosses itself or branches off. The sections of the loop run horizontally or vertically between the centers of orthogonally adjacent cells, parallel to the grid lines.
+
+example puzzle
+2____
+_____
+__1__
+_____
+1___0
+Rules: 
+A	Paint some empty white cells of the diagram black 
+B	and draw a single closed loop passing through all empty white cells. 
+C	The number in some cells denotes the number of black cells orthogonally adjacent to this cell. 
+D	There may exist some black cells not adjacent to a numbered cell. 
+E	Numbered cells are never painted black. 
+F	Two black cells must not be orthogonally adjacent. 
+G	The loop never crosses itself or branches off. 
+H	The sections of the loop run horizontally or vertically between the centers of orthogonally adjacent cells, parallel to the grid lines.
+
+condition A
+Square = Square X Y Box
+Box = Number N
+	| Black
+	| Link Type
+	
+condition C
+numbers(B = Board Qs) = 
+	\forall Q = Square X Y (Number N) \in Qs .
+	  \exists P \subset Qs .
+	    /\ \forall S \in P . 
+		  /\ adjacent(S,Q)
+		  /\ S = Square _ _ Black
+		/\ |P| = N
+		/\ \not \exists T= Square _ _ Black .
+		  /\ adjacent(T,Q)
+		  /\ \not T \in P
+		
+condition D
+simply do not constrain black to only appear next to a numbered cell
+
+condition E
+satisfied by our ADT definition of Box
+
+condition F
+solitary(B = Board Qs) =
+	\forall Q \in Qs .
+	  black?(Q) => 
+	    \not \exists P .
+		  /\ black?(P)
+		  /\ adjacent(P,Q)
+		  
+condition G
+satisfied by our definition of what elements compose the loop and what arrangements are valid
+
+condition H
+if a square wants to connect to another square, it should be connected back.
+suppose there is some function
+buds :: Square -> [Square]
+linked(P,Q) = (* transitive closure of linked_adjacent *)
+	/\ link?(P)
+	/\ link?(Q)
+	/\ P \in buds(Q)
+	/\ Q \in buds(P)
+
+condition B
+connectedness(B = Board Qs) =
+	\forall P,Q \in Qs .
+	  link?(P) /\ link?(Q) => connected(P,Q)
+	  
+connected(P,Q) = (* transitive closure of adjacent *)
+	/\ link?(P)
+	/\ link?(Q)
+	/\ \/ P == Q
+	   \/ linked(P,Q)
+	   \/ \exists R .
+	     /\ connected(P,R)
+		 /\ connected(R,Q)
+		 
+all together
+solution(B) =
+	/\ numbers(B)
+	/\ solitary(B)
+	/\ connectedness(B)

@@ -1,0 +1,62 @@
+Viu
+http://www.janko.at/Raetsel/Nikoli/Viu.htm
+Rules: Write numbers ≥ 0 into some cells of the diagram and blacken all other cells. All numbered cells must form a single orthogonally contiguous area. Same numbers must not be orthogonally adjacent. A number denotes how many black cells can be seen altogether looking north, south, east and west until a white cell or the edge of the diagram is reached.
+
+Example puzzle
+________
+__12_2__
+_1____2_
+___43_1_
+_1_02___
+_4____1_
+__4_10__
+________
+goes to
+XXX32010
+X212X2X2
+313XX42X
+XXX43X15
+41202X2X
+X4X2X21X
+XX40102X
+XXX302XX
+Rules: 
+A	Write numbers >= 0 into some cells of the diagram and blacken all other cells. 
+B	All numbered cells must form a single orthogonally contiguous area. 
+C	Same numbers must not be orthogonally adjacent. 
+D	A number denotes how many black cells can be seen altogether looking north, south, east and west until a white cell or the edge of the diagram is reached.
+	
+condition A
+Square = Square X Y Box
+Box = Number N
+	| Black
+	
+condition B
+standard transitive closure of "adjacent and both members of some type"
+
+condition C
+matches(B = Board Qs) = 
+	\forall Q = Square _ _ (Number N) \in Qs .
+	  \not \exists P = Square _ _ (Number N) \in Qs .
+	    adjacent(P,Q)
+	
+condition D
+visible_count(Q,B = Board Qs) = 
+	visible(north(Q),north) +
+	visible(east(Q),east) +
+	visible(south(Q),south) +
+	visible(west(Q),west)
+	
+visible(S,f) =
+	if black?(S)
+	then 1 + visible(f(S),f)
+	else 0
+	
+visibility(B = Board Qs) =
+	\forall Q = Square _ _ (Number N) \in Qs .
+	  visible_count(Q) == N
+	  
+all together
+solution(B = Board) = 
+	/\ matches(B)
+	/\ solution(B)

@@ -1,0 +1,64 @@
+galaxien (tentaisho)
+http://www.janko.at/Raetsel/Galaxien/index.htm
+Rules: Divide the diagram along the grid lines into regions. Each region must contain exactly one circle and must be point symmetric on this circle.
+
+My interpretation
+Rules: 
+A	Divide the diagram along the grid lines into regions. 
+B	Each region must contain exactly one circle 
+C	and must be point symmetric on this circle.
+
+constraints (circles) can be in a square, on the line between two squares, or on the point between four squares.
+Constraint X Y
+for points on lines, use .5
++ + +
+ o   
++ + +
+o is at 1 1
++ + +
+  o   
++ + +
+o is at 1.5 1
++ + +
+     
++ 0 +
+   
++ + +
+o is at 1.5 1.5
+
+regions must be circularly symmetric
+regions must be connected
+regions are sets of squares
+Region Squares
+symmetric(R = Region S, C = Constraint cx cy) =
+	\forall Q = Square x y \in S .
+	  \exists Square x' y' \in S
+		where
+		  dx = x - cx
+		  x' = cx - dx
+		  dy = y - cy
+		  y' = cy - dy
+
+connected(R = Region S) = 
+	\/ \forall Q = Square x y \in S .
+	  \/ \exists Square x+1 y \in S
+	  \/ \exists Square x-1 y \in S
+	  \/ \exists Square x y+1 \in S
+	  \/ \exists Square x y-1 \in S
+	\/ |S| = 1
+	
+Solution :: [Region] => Solution
+Solution Regions
+
+solves(S = Solution Rs, B = Board W H Cs) =
+	/\ \forall R \in Rs .
+	  /\ connected(R)
+	  /\ \not \exists Ca, Cb \in Cs . 
+	    /\ Ca \in R
+		/\ Cb \in R
+	  /\ \forall C \in Cs .
+	    C \in R => symmetric(R,C)
+	/\ \forall Q \in Squares(W,H) .
+	  \exists R \in Rs .
+	    Q \in R
+	

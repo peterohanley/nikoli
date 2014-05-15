@@ -1,0 +1,102 @@
+Heyawake
+http://www.janko.at/Raetsel/Heyawake/index.htm
+Rules: Blacken some cells of the diagram [paper] resp. color the gray cells of the diagram black or white [app]. A  number in a region indicates how many cells in this region must be blackened. In regions without a number an arbitrary number of cells may be blackened (maybe none). Black cells must not be orthogonally adjacent (diagonally is allowed). Stripes of adjacent white cells must not span across more than two regions horizontally or vertically. All white cells must form a single orthogonally contiguous area.
+
+My interpretation
+Rules: 
+A	Blacken some cells of the diagram [paper] resp. color the gray cells of the diagram black or white [app]. 
+B	A  number in a region indicates how many cells in this region must be blackened. 
+C	In regions without a number an arbitrary number of cells may be blackened (maybe none). 
+D	Black cells must not be orthogonally adjacent (diagonally is allowed). 
+E	Stripes of adjacent white cells must not span across more than two regions horizontally or vertically. 
+F	All white cells must form a single orthogonally contiguous area.
+
+condition B and C
+countblacks (B=Board Rs Qs) R = fold + 0 (zipWith * (map (\x . x \in R) Qs) (map black? Qs))
+
+blackcounts(B = Board(Rs,Qs)) = 
+	\forall R=Region _ N \in Rs .
+	  countblacks(B,R) == N
+	  
+condition D
+solitaries(B = Board Rs Qs) =
+	\forall Q \in Q .
+	  black?(Q) => \forall P \in orthos(Q) . \not black?(P)
+	  
+condition F
+an area is contiguous if every square is connected to every other square
+in functions below, assume the universe of squares (the board) is accessible somehow
+connected(P = Square, Q = Square) = 
+	\/ P == Q
+	\/ adjacent(P,Q)
+	\/ \exists R = Square .
+	  /\ connected(P,R)
+	  /\ connected(R,Q)
+adjacent(P = Square px py, Q = Square qx qy) =
+	\/ /\ px = qx 
+	   /\ \/ py = qy + 1
+		  \/ py = qy - 1
+	\/ /\ py = qy 
+	   /\ \/ px = qx + 1
+		  \/ px = qx - 1 
+		  
+connected(B = Board Rs Qs) = 
+	\forall P, Q \in Qs . 
+	  white?(P) /\ white?(Q) => connected(P,Q)
+		  
+condition E
+but I won't put in the maybe handling here
+left :: Square -> Maybe Square
+left(Square X Y) = Square X-1 Y
+
+right(Square X Y) = Square X+1 Y
+up(Square X Y) = Square X Y+1
+down(Square X Y) = Square X Y-1 
+
+horizontal_adj(P = Square, Q = Square) = 
+	\/ P = left(Q)
+	\/ P = right(Q)
+	
+our horizontal relation
+horiz(P = Square,Q = Square) =
+	/\ horizontal_adj(P,Q)
+	/\ white?(P)
+	/\ white?(Q)
+	
+vert_adj(P = Square, Q = Square) = 
+	\/ P = up(Q)
+	\/ P = down(Q)
+	
+vert(P = Square,Q = Square) =
+	/\ vert_adj(P,Q)
+	/\ white?(P)
+	/\ white?(Q)
+	
+stripe_H(P = Square) = 
+	if white? P
+	then transitive closure of horiz(P,_)
+	else \emptyset
+stripe_V(P = Square) = 
+	if white? P
+	then transitive closure of vert(P,_)
+	else \emptyset
+	
+stripe coverages
+stripes_ok_meta(B = Board Rs Qs, function f) = 
+	\forall Q \in Qs .
+	  \not \exists Ra,Rb,Rc \in Rs .
+	    /\ distinct Ra,Rb,Rc
+		/\ \forall R \in {Ra,Rb,Rc} .
+		  f(Q) intersect R /= \emptyset
+		  
+stripes_ok(B = Board Rs Qs) = 
+	/\ stripes_ok_meta(B,stripe_H)
+	/\ stripes_ok_meta(B,stripe_V)
+
+all together now
+solution(B = Board) = 
+	/\ stripes_ok(B)
+	/\ solitaries(B)
+	/\ connected(B)
+	/\ blackcounts(B)
+	

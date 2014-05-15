@@ -1,0 +1,99 @@
+nawabari
+http://www.janko.at/Raetsel/Nikoli/Nawabari.htm
+Rules: 
+	Divide the diagram along the grid lines in non-overlapping rectangles. 
+	Each rectangle must contain exactly one cell with a givenName number. 
+	The number in a cell denotes how many sides of the cell are used by rectangle borders, including the edge of the diagram.
+
+%% a square is (x y)
+Square x y
+%% a constraint is a number and its location
+Constraint Num (Square x y)
+%% the board is a set of squares and constraints
+Board [Square] [Constraint]
+%% a rectangle = (x y w h)
+Rect x y width height
+
+%% a solution s consists of N rectangles
+Solution [Rect]
+
+%% a square (a b) contains a rectangle (x y w h) iff
+%%   a >= x & a < (x+w) & b >= y & b < (y+h)
+(Square a b) in (Rect x y w h) = 
+	/\ a >= x
+	/\ a < (x+w)
+	/\ b >= y
+	/\ b < (y+h)
+	
+A = (Rect xa ya wa ha) intersects B = (Rect xb y wb hb) = 
+	\exists S = (Square sx sy) .
+	  /\ S in A
+	  /\ S in B
+(Rect xa ya wa ha) intersects (Rect xb yb wb hb) = 
+	/\ \exists x .
+	  /\ x >= max(xa,xb)
+	  /\ x < min((xa + wa),(xb + wb))
+	/\ \exists y .
+	  /\ y >= max(ya,yb)
+	  /\ y < min((ya + ha),(yb + hb))
+(Rect xa ya wa ha) intersects (Rect xb yb wb hb) = 
+	/\ max(xa,xb) < min((xa + wa),(xb + wb))
+	/\ max(ya,yb) < min((ya + ha),(yb + hb))
+edges(R = Rectangle x y w h, S = Square p q) = 
+  if S \in R
+    x==p + x+w==p + y==q + y+h==q
+  else 
+    0
+  end
+a solution s is correct if
+  /\ \forall squares q \in board . \exists rectangle r \in s . q \in r
+  /\ \forall rectangles r1 \in s . \forall rectangles r2 \in s . r1 != r2
+    -> /\ \not r1 intersects r2 
+       /\ \not r2 intersects r1
+  /\ \forall number u 
+       \exists rect r \in s 
+         /\ u.square \in r 
+         /\ edges(r,s) = u.num
+
+solves(S = Solution rects, B = Board squares constraints) = 
+	/\ \forall Q \in squares .
+	  \exists R \in rects .
+	    Q \in R
+	/\ \forall M,N \in rects .
+	  M /= N => \not M intersects N
+	/\ \forall C = Constraint Num S \in constraints .
+	  \exists R \in rects .
+	    /\ S \in R
+		/\ Num = edges(R,S)
+		
+how does this help us solve it?
+we can reformulate our solves criterion first with ordered rects, and then with each rect replaced with a candidate group.
+solves_in_order(S = Solution rects, B = Board squares constraints) = 
+	/\ \forall Q=(z,Constraint N sq) \in zip(rects,constraints) .
+	  /\ sq \in z
+	  /\ edges(sq,z)=N
+	/\ \forall M,N \in rects .
+	  M /= N => \not M intersects N
+	/\ \forall Q \in squares .
+	  \exists R \in rects .
+	    Q \in R
+		
+Solution :: [[Rectangle]] -> Solution
+Solution' rects 
+maybe_solves_in_order(S = Solution' rects, B =  Board squares constraints) = 
+	/\ \forall Q = (rs, Constraint N sq \in zip(rects,constraints) .
+	  /\ \forall rect \in rs .
+	    /\ sq \in rect
+		/\ edges(sq,rect) = N
+	/\ \forall R \in rects .
+	  \forall M,N \in R .
+	    M /= N => \not M intersects N
+	/\ \forall Q \in squares .
+	  \exists R \in fold append [] rects .
+	    Q \in R
+
+some things you can conclude
+\forall R \in (set of all possible rects for some board) .
+  \forall B _ sqb,C _ sqc \in (constraints for that board) .
+	sqb \in R => \not sqc \in R (if it's a possible rectangle)
+	  

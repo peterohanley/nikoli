@@ -1,0 +1,5 @@
+Shirokuro
+http://www.janko.at/Raetsel/Nikoli/Shirokuro.htm
+Rules: Connect each black circle with a white circle by a straight horizontal or vertical line. In each circle exactly one line ends. Lines do not pass through other circles; lines do not cross other lines.
+
+make a line a 1xN or Nx1 rectangle. every rectangle must have one of each inside it. rectangles may not intersect.

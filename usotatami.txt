@@ -1,0 +1,50 @@
+usotatami
+http://www.janko.at/Raetsel/Nikoli/Usotatami.htm
+Rules: Divide the diagram along the grid lines into rectangles which are exactly 1 cell width and any number of cells long. Each rectangle must contain exactly one cell with a number which is NOT identical to the length of the rectangle. The corners of 4 rectangles must not share a grid point.
+
+my changes follow below
+Rules: 
+A	Divide the diagram along the grid lines into rectangles which are exactly 1 cell width and any number of cells long. 
+B	Each rectangle must contain exactly one cell with a number which is NOT identical to the length of the rectangle. 
+C	The corners of 4 rectangles must not share a grid point.
+	
+
+Square :: int -> int -> Square
+either w or h = 1
+Rect :: int -> int -> int -> int -> Rect
+Rect x y w h
+Solution :: [Rect]
+Solution Rects
+
+Constraint :: int -> Square -> Constraint
+Constraint N Squares
+
+Board :: int -> int -> [Constraint] -> Board
+Board width height Constraints
+
+do four rectangles share a corner?
+phrase as "is there a 2x2 rectangle that overlaps all of them, while they are all disjoint"
+C |->
+corners(A,B,C,D) ->
+	/\ \not \exists x,y .
+	  let R = Rect x y 2 2 in
+	    /\ A intersects R
+		/\ B intersects R
+		/\ C intersects R
+		/\ D intersects R
+	/\ \forall P,Q \in {A, B, C, D} .
+	  P /= Q => \not P intersects Q
+A |->
+solves(S = Solution Rs, B = Board W H Cs) ->
+	/\ \forall Q \in squares(B) .
+		\exists R \in Rs .
+			B \in R
+	/\ \forall P,Q \in Cs .
+	  P /= Q => \not \exists R \in Rs .
+	    /\ P \in R
+		/\ Q \in R
+	/\ \forall A,B,C,D \in Rs .
+	  corners(A,B,C,D)
+	/\ \forall R \in Rs .
+	  \/ R = Rect _ _ 1 _
+	  \/ R = Rect _ _ _ 1

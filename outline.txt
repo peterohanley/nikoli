@@ -1,0 +1,12 @@
+The aim of this project is to automatically solve nikoli puzzles given formal descriptions of what a solution is and a description of the puzzle.
+
+The chosen path for this is to incrementally refine our candidate solutions, starting from a description of a set of boards such that every possible valid solution is an element. To do so we want to find predicates p such that 
+\not p(set of boards S) -> \not \exists b \in S : b solves our puzzle.
+
+For example, consider Nawabari. if our set of boards is one such that every board contains a rectangle that overlaps two numbers, we know that none of those boards is a solution.
+
+Some obvious predicates:
+
+if the puzzle is one with a connectedness requirement (e.g. Nurikabe) and we are representing sets of boards by sets of valid colorings for each square, every color that needs to be connected must have at least one connectable color for each. Keeping this generic is forcing a loss of clarity, so I will explain the specific nurikabe case.
+
+All black squares in a solved nurikabe puzzle are connected (von neumann neighborhood) so in a candidate, any square that's set to black must have at least one adjacent square that could possibly be black.
